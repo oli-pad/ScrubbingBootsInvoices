@@ -19,6 +19,8 @@ class BootsInvoiceDetail:
     def SAL_Invoice_type(self):
         if self.Deal_Type()=='Promotion Site Fees':
             return 'MS'
+        if self.Deal_Type()=='Credit Note':
+            return 'MS'
     
     def Unit_Funding_Type(self):
         if self.SAL_Invoice_type()=='MS':
@@ -30,6 +32,8 @@ class BootsInvoiceDetail:
     def Deal_Type(self):
         line_desc_status=False
         for line in self.lines:
+            if re.search('CREDIT NOTE',line):
+                return 'Credit Note'
             if re.search('FUNDING TYPE  QUANTITY  UNIT PRICE   VALUE   VAT RATE /',line):
                 line_desc_status=True
             elif line_desc_status and re.search('(\s?)(.*) ([0-9.,]*) ([0-9.,]*)[%]',line):
@@ -37,6 +41,8 @@ class BootsInvoiceDetail:
 
     def Invoice_No(self):
         for line in self.lines:
+            if re.search('CREDIT NOTE NO: (\d+)',line):
+                return re.search('CREDIT NOTE NO: (\d+)',line).group(1)
             if re.search('INVOICE NO: (\d+)',line):
                 return re.search('INVOICE NO: (\d+)',line).group(1)
             if re.search('(\d+)     PAGE 1',line):
@@ -74,8 +80,11 @@ class BootsInvoiceDetail:
     def Net_Amount(self):
         if self.SAL_Invoice_type()=='MS':
             for line in self.lines:
-                if re.search('NETT VALUE             ([0-9.,]*)   GBP',line):
-                    return [re.search('NETT VALUE             ([0-9.,]*)   GBP',line).group(1).replace(',','')]
+                if re.search('NETT VALUE[ ]*([0-9.,]*)[ ]*GBP',line):
+                    if self.Deal_Type()=='Credit Note':
+                        return ["-"+str(float(re.search('NETT VALUE[ ]*([0-9.,]*)[ ]*GBP',line).group(1).replace(',','')))]
+                    else:
+                        return [re.search('NETT VALUE[ ]*([0-9.,]*)[ ]*GBP',line).group(1).replace(',','')]
     
     def VAT_Rate(self):
         if self.SAL_Invoice_type()=='MS':
@@ -89,8 +98,10 @@ class BootsInvoiceDetail:
     def Gross_Amount(self):
         if self.SAL_Invoice_type()=='MS':
             for line in self.lines:
-                if re.search('TOTAL             ([0-9.,]*)   GBP',line):
-                    return [re.search('TOTAL             ([0-9.,]*)   GBP',line).group(1).replace(',','')]
+                if re.search('TOTAL[ ]*([0-9.,]*)[ ]*GBP',line):
+                    if self.Deal_Type()=='Credit Note':
+                        return [str(float(re.search('TOTAL[ ]*([0-9.,]*)[ ]*GBP',line).group(1).replace(',',''))*-1)]
+                    return [re.search('TOTAL[ ]*([0-9.,]*)[ ]*GBP',line).group(1).replace(',','')]
                 
     def Store_Format(self):
         if self.SAL_Invoice_type()=='MS':
