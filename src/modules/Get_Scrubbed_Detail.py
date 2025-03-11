@@ -7,10 +7,8 @@ def Get_Scrubbed_Detail(folder_path,Salitix_Client_Number,Salitix_Customer_Numbe
     files = ProduceFileList(folder_path)
     df = pd.DataFrame()
     for file in files:
-        try:
-            print(os.path.join(folder_path,file))
-            df2 = BootsInvoiceDetail(os.path.join(folder_path,file),Salitix_Client_Number,Salitix_Customer_Number).Full_Invoice()
-            df=pd.concat([df,df2])
-        except:
-            None
+        print(os.path.join(folder_path,file))
+        df2 = BootsInvoiceDetail(os.path.join(folder_path,file),Salitix_Client_Number,Salitix_Customer_Number).Full_Invoice()
+        print(df2)
+        df=pd.concat([df,df2])
     return df
